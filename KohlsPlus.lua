@@ -1,6 +1,13 @@
--- Discontinued cus this script is bad lol
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Amourousity/Conversio/main/source.lua"))()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Amourousity/Utilitas/main/source.lua"))()
+if KohlsPlus then
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+		Title = "KohlsPlus is already launched",
+		Text = `If you are lost, then type {prefix.."cmds to print out the commands in the console which can be opened using F9 (FN+9 or /console in chat)"}`
+	})
+	return
+end
+if not identifyexecutor():lower():find("awp") then
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/Amourousity/Conversio/main/source.lua"))()
+end
 
 local t = os.time()
 local function GetPlayer(text)
@@ -25,9 +32,6 @@ local startupcommands = {
 	"nok",
 	"iy"
 }
-if KohlsPlus then
-	return
-end
 
 if not game:GetService("RunService"):IsStudio() then
 	assert(game:GetService("HttpService"):JSONDecode(request({Url = "https://raw.githubusercontent.com/trollfacenan/random-kah-scripts/main/run.json", Method = "GET"}).Body).works, "Kohls+ is under maintenance, please try again later.")
@@ -81,6 +85,18 @@ local spamming = ""
 local fastspamming = ""
 local antipmkickv = true
 local commands
+
+if not game:GetService("GamePassService") then 
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+		Title = "Warning",
+		Text = "Perm & P299 will not work due to Roblox disabling/breaking GamePassService"
+	})
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+		Title = "More info",
+		Text = "https://devforum.roblox.com/t/gamepassservice-has-simply-ceased-to-exist/"
+	})
+	settingsTable.perm = false
+end
 commands = {
 	["cmds"] = {
 		name = "cmds",
@@ -177,7 +193,7 @@ commands = {
 				})
 			end
 		end,
-		desc = "Opposite of "..settingsTable.prefix.."ban"
+		desc = `Undo {settingsTable.prefix.."ban"}`
 	},
 	["kick"] = {
 		name = "kick",
@@ -192,7 +208,7 @@ commands = {
 			if GetPlayer(who) ~= game:GetService("Players").LocalPlayer then
 				local plr = GetPlayer(who)
 				local name = plr.Name
-				run("pm "..who.." You have been locked from this server\nGet Shortcut now")
+				run("pm "..who.." You have been kicked from this server\nYou cannot interact with the map and respawn.")
 				settingsTable.connections["Kick"..name] = plr.CharacterAdded:Connect(function()
 					settingsTable.connections["_Kick"..name]:Disconnect()
 					repeat
@@ -271,6 +287,7 @@ commands = {
 				})
 				return "Failed"
 			end
+			if pcall(httprequest) == "Failed" then return end
 			local servers = {}
 			local req = httprequest({Url = string.format("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Desc&limit=100&excludeFullGames=true", game.PlaceId)})
 			local body = game:GetService("HttpService"):JSONDecode(req.Body)
@@ -580,61 +597,6 @@ commands = {
 			end)
 		end,
 		desc = "Kicks someone using rockets. P299 required"
-	},
-	["lagall"] = {
-		name = "templagall",
-		action = function()
-			if #game:GetService("Players"):GetPlayers() < 4 then
-				return game:GetService("StarterGui"):SetCore("SendNotification", {
-					Title = "Error",
-					Text = "Insufficient amount of players (min. 4)"
-				})
-			end
-			task.spawn(function()
-				running = true
-				while task.wait() do
-					run("respawn all all all")
-					if not running then break end
-				end
-			end)
-			task.wait(10)
-			game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game:GetService("Players").LocalPlayer)
-		end,
-		desc = "Temporarily lags everyone using respawn."
-	},
-	["lagall2"] = {
-		name = "lagall",
-		action = function()
-			local loop_dogs = {}
-			local stopped = false
-			task.defer(function()
-				task.wait(30)
-				stopped = true
-				run("fix")
-				run("unblind all")
-			end)
-			task.spawn(function()
-				run("blind all")
-				run("brightness -nan")
-				run("fogend 0 fuck")
-				run("blind others fuck")
-				run("time -")
-				for i = 1, 52 do
-					run("dog all all all")
-				end
-			end)
-			task.wait(.25)
-			task.spawn(function()
-				while task.wait() do
-					if stopped then break end
-					run("tp all all all")
-					task.wait()
-					run("stand all all all")
-					if stopped then break end
-				end
-			end)
-		end,
-		desc = "Atleast 5 players is needed to crash others"
 	},
 	["aa"] = {
 		name = "iy",
@@ -993,7 +955,11 @@ end)
 
 for i, v in startupcommands do
 	run(settingsTable.prefix..v)
+	if #startupcommands <= 12 then
+		print(`ran {v}`)
+	end
 end
+if #startupcommands >= 13 then warn("did not log startup commands because there is >= 13 of them.") end
 
 local function antirkick(character)
 	task.wait(.2)
@@ -1017,7 +983,7 @@ end)
 local assets = workspace:FindFirstChildOfClass("Terrain"):WaitForChild("_Game")
 local pads = assets:WaitForChild("Admin"):WaitForChild("Pads")
 
-game:GetService("RunService").PreSimulation:Connect(function(dt)
+game:GetService("RunService").PreSimulation:Connect(function()
 	for i, v in game:FindService("Players"):GetPlayers() do
 		if settingsTable.antivg and (game:GetService("Players").LocalPlayer.Name ~= v.Name) and v.Character and v.Character:FindFirstChild("VampireVanquisher") or settingsTable.antivg and (game:GetService("Players").LocalPlayer.Name ~= v.Name) and v.Backpack:FindFirstChild("VampireVanquisher") then
 			local name = v.Name
@@ -1101,11 +1067,7 @@ task.defer(function()
 				end
 				task.spawn(function()
 					if pad:FindFirstChild("Head") then
-						firetouchinterest(pad.Head, game:GetService("Players").LocalPlayer.Character.HumanoidRootPart, 1)
-						firetouchinterest(pad.Head, game:GetService("Players").LocalPlayer.Character.HumanoidRootPart, 0)
-						firetouchinterest(pad.Head, game:GetService("Players").LocalPlayer.Character.HumanoidRootPart, 1)
-						task.wait()
-						firetouchinterest(pad.Head, game:GetService("Players").LocalPlayer.Character.HumanoidRootPart, 0)
+						firetouchinterest(pad.Head, game:GetService("Players").LocalPlayer.Character.HumanoidRootPart)
 					end
 				end)
 			end
@@ -1127,7 +1089,7 @@ task.defer(function()
 	end)
 end)
 
-game:GetService("RunService").Heartbeat:Connect(function(dt)
+game:GetService("RunService").Heartbeat:Connect(function()
 	if spamming ~= "" then
 		run(spamming)
 	end
